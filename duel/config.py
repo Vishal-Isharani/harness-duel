@@ -6,6 +6,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
+class InputError(Exception):
+    """Bad input (suite or task selection); `duel` exits with code 3, never a verdict code."""
+
+
 @dataclass
 class Harness:
     name: str
@@ -30,6 +34,7 @@ class Suite:
     root: Path
     repo: Path
     tasks: list[Task]
+    total_tasks: int  # tasks in the suite before any `only` selection
 
 
 def load_harness(path: str | Path) -> Harness:
@@ -46,7 +51,8 @@ def load_harness(path: str | Path) -> Harness:
     )
 
 
-def load_suite(path: str | Path) -> Suite:
+def load_suite(path: str | Path, only: list[str] | None = None) -> Suite:
+    """Load the suite's tasks; `only` keeps just those task ids (in suite order)."""
     root = Path(path).resolve()
     tasks = []
     for file in sorted(root.glob("tasks/*/task.toml")):
@@ -54,5 +60,12 @@ def load_suite(path: str | Path) -> Suite:
         tasks.append(Task(file.parent.name, data["prompt"].strip(), file.parent / "hidden",
                           data.get("timeout", 600)))
     if not tasks:
-        raise SystemExit(f"No tasks found in {root / 'tasks'}")
-    return Suite(root, root / "repo", tasks)
+        raise InputError(f"No tasks found in {root / 'tasks'}")
+    total = len(tasks)
+    if only is not None:
+        known = [t.id for t in tasks]
+        unknown = [i for i in only if i not in known]
+        if unknown:
+            raise InputError(f"Unknown task id(s): {', '.join(unknown)}. Available: {', '.join(known)}")
+        tasks = [t for t in tasks if t.id in only]
+    return Suite(root, root / "repo", tasks, total)

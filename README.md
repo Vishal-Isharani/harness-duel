@@ -1,5 +1,7 @@
 # harness-duel
 
+📄 **See a real result first:** [`reports/example-report.md`](reports/example-report.md)
+
 **Did that change to the harness make the coding agent better, or not?**
 
 A harness is everything around the model that shapes how a coding agent works: AGENTS.md /
@@ -53,7 +55,8 @@ per task costs you in certainty.
 > ⚠️ The example harnesses pass `--dangerously-skip-permissions`, because headless runs cannot
 > answer permission prompts. Run in a container or VM, or replace it with `--allowedTools`.
 
-Exit codes, so it can gate a harness change in CI: `0` BETTER, `1` WORSE, `2` NO CLEAR DIFFERENCE.
+Exit codes, so it can gate a harness change in CI: `0` BETTER, `1` WORSE, `2` NO CLEAR DIFFERENCE,
+`3` input error (no tasks found, or a bad `--tasks`).
 
 ## How it decides
 
@@ -119,6 +122,10 @@ Use `--runs 1` for a cheap first look, and the default 3 before rolling a change
 3. **Harnesses:** a folder each with a `harness.toml` (agent, model, args) and a `files/` folder
    copied into the repo before the agent runs. Change one thing per candidate.
 4. **Run:** `uv run duel evaluate --suite <your folder> --baseline … --candidate …`
+
+   Add `--tasks to-csv,transfer` to run only those task ids, for a cheap rerun or to debug one task.
+   A subset gives a weaker verdict (with 4 or fewer decisive tasks it can never reach one), and
+   the report says so. Run the full suite before rolling a change out.
 
 ## Development
 

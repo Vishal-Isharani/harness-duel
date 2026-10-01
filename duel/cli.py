@@ -7,23 +7,30 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from .config import load_harness, load_suite
+from .config import InputError, load_harness, load_suite
 from .decide import duel, summarize, verdict
 from .runner import count_lint, run_once
 
 EXIT_CODES = {"BETTER": 0, "WORSE": 1, "NO CLEAR DIFFERENCE": 2}
+EXIT_INPUT_ERROR = 3  # bad --suite/--tasks; kept apart so CI never reads a typo as a verdict
 
 
 def money(x: float | None) -> str:
     return "n/a" if x is None else f"${x:.3f}"
 
 
-def report(base: str, cand: str, rows: list[dict], result: dict, runs: int) -> str:
+def report(base: str, cand: str, rows: list[dict], result: dict, runs: int,
+           selected: list[str] | None = None, total: int = 0) -> str:
     lines = [
         f"# Harness duel: `{base}` vs `{cand}`", "",
         f"## Verdict: {result['verdict']}", "",
         f"{result['summary'].capitalize()}. {len(rows)} tasks, {runs} run(s) per task per harness.",
         f"Chance of this many candidate wins if the change did nothing: {result['p_better']:.1%}.", "",
+    ]
+    if selected is not None:
+        lines += [(f"Tasks: {len(selected)} of {total} selected with `--tasks` ({', '.join(selected)}). "
+                   "A subset gives a weaker verdict; run the full suite before rolling a change out."), ""]
+    lines += [
         "| Task | Winner | Why | Tests | New lint | Cost | Errors |",
         "|---|---|---|---|---|---|---|",
     ]
@@ -38,8 +45,10 @@ def report(base: str, cand: str, rows: list[dict], result: dict, runs: int) -> s
     return "\n".join(lines)
 
 
-def evaluate(suite_dir: str, base_dir: str, cand_dir: str, runs: int, out_root: str) -> dict:
-    suite = load_suite(suite_dir)
+def evaluate(suite_dir: str, base_dir: str, cand_dir: str, runs: int, out_root: str,
+             tasks: list[str] | None = None) -> dict:
+    suite = load_suite(suite_dir, only=tasks)
+    selected = None if tasks is None else [t.id for t in suite.tasks]
     base, cand = load_harness(base_dir), load_harness(cand_dir)
     out = Path(out_root) / datetime.now().astimezone().strftime("%Y%m%d-%H%M%S")
     out.mkdir(parents=True)
@@ -60,8 +69,10 @@ def evaluate(suite_dir: str, base_dir: str, cand_dir: str, runs: int, out_root: 
         rows.append({"task": task.id, "base": b, "cand": c, "winner": winner, "reason": reason})
 
     result = verdict(rows)
-    (out / "report.md").write_text(report(base.name, cand.name, rows, result, runs))
-    (out / "report.json").write_text(json.dumps({"verdict": result, "tasks": rows}, indent=2))
+    (out / "report.md").write_text(report(base.name, cand.name, rows, result, runs,
+                                          selected, suite.total_tasks))
+    (out / "report.json").write_text(json.dumps(
+        {"verdict": result, "selected_tasks": selected, "tasks": rows}, indent=2))
     print(f"\nVERDICT: {result['verdict']} ({result['summary']})\nReport: {out / 'report.md'}")
     return result
 
@@ -75,8 +86,18 @@ def main(argv: list[str] | None = None) -> int:
     ev.add_argument("--suite", default="examples", help="folder with repo/ and tasks/ (default: examples)")
     ev.add_argument("--runs", type=int, default=3, help="runs per task per harness (default: 3)")
     ev.add_argument("--out", default="runs", help="output folder (default: runs)")
+    ev.add_argument("--tasks", help="comma-separated task ids to run (default: all)")
     args = parser.parse_args(argv)
-    result = evaluate(args.suite, args.baseline, args.candidate, args.runs, args.out)
+    try:
+        tasks = None
+        if args.tasks is not None:
+            tasks = list(dict.fromkeys(t.strip() for t in args.tasks.split(",") if t.strip()))
+            if not tasks:
+                raise InputError("--tasks given but no task ids in it")
+        result = evaluate(args.suite, args.baseline, args.candidate, args.runs, args.out, tasks)
+    except InputError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return EXIT_INPUT_ERROR
     return EXIT_CODES[result["verdict"]]
 
 
