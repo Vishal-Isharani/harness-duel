@@ -1,0 +1,5 @@
+# Offline stand-in for an agent: no API key, no cost. Produces the good solution 30% of the time.
+name = "demo-baseline"
+agent = "demo"
+demo_quality = 0.3
+demo_cost = 0.10

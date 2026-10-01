@@ -1,0 +1,4 @@
+name = "candidate"
+agent = "claude-code"
+model = "sonnet"
+args = ["--dangerously-skip-permissions"]

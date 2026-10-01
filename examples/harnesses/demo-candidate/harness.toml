@@ -1,0 +1,5 @@
+# Offline stand-in: produces the good solution 90% of the time, but costs a bit more.
+name = "demo-candidate"
+agent = "demo"
+demo_quality = 0.9
+demo_cost = 0.12

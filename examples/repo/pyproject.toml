@@ -1,0 +1,21 @@
+# Team conventions, enforced by ruff. The duel counts only issues the agent ADDS.
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+  "E", "F",   # errors, unused imports/variables
+  "B",        # likely bugs
+  "T20",      # no print() in library code
+  "ANN",      # type hints on every function
+  "EM",       # exception messages as variables, not inline strings
+  "SIM",      # simpler code
+]
+ignore = ["ANN401"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN", "EM"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

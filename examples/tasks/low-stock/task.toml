@@ -1,0 +1,5 @@
+prompt = """
+The warehouse team wants a reorder list. Add `Inventory.low_stock(threshold: int) -> list[str]`
+returning the SKUs with FEWER than `threshold` units, in alphabetical order.
+A negative threshold raises `InventoryError`.
+"""

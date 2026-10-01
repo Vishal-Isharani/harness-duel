@@ -1,0 +1,6 @@
+prompt = """
+Add `Inventory.remove(sku: str, qty: int) -> None`.
+- Removing a SKU that is not in the inventory raises `UnknownSku`.
+- Removing more units than are in stock raises `OutOfStock` and leaves stock unchanged.
+- When a SKU reaches zero units it disappears from the inventory.
+"""

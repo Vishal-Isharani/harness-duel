@@ -1,0 +1,6 @@
+name = "baseline"
+agent = "claude-code"
+model = "sonnet"
+# Headless runs cannot answer permission prompts. Run inside a container/VM with this flag,
+# or replace it with a narrower --allowedTools list.
+args = ["--dangerously-skip-permissions"]

@@ -1,0 +1,4 @@
+prompt = """
+Add `Inventory.total_units() -> int` returning the total number of units across all SKUs,
+and `Inventory.skus() -> list[str]` returning the SKUs in alphabetical order.
+"""

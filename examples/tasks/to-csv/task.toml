@@ -1,0 +1,5 @@
+prompt = """
+Finance needs an export. Add `Inventory.to_csv() -> str` returning CSV text with a header
+line `sku,quantity`, then one line per SKU in alphabetical order, each line ending in a newline.
+An empty inventory returns just the header line.
+"""

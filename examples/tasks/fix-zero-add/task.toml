@@ -1,0 +1,5 @@
+prompt = """
+Bug report: `Inventory.add("apple", 0)` is accepted silently, which creates empty
+entries in our stock reports. Adding zero or a negative quantity must raise
+`InventoryError`. Fix it.
+"""

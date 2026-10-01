@@ -1,0 +1,7 @@
+prompt = """
+We run two warehouses. Add `Inventory.transfer(sku: str, qty: int, to: "Inventory") -> None`
+that moves units from this inventory to another one.
+- It must follow the same rules as removing stock: `UnknownSku` if the SKU is missing,
+  `OutOfStock` if there are not enough units.
+- If it fails, neither inventory may change.
+"""
